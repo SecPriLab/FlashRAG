@@ -432,7 +432,7 @@ class DenseRetriever(BaseTextRetriever):
                 f"Pooling method in model config file is {detect_pooling_method}, but the input is {pooling_method}. Please check carefully."
             )
 
-    def _search(self, query: str, num: int = None, return_score=False):
+    def _search(self, query: str, num: int = None, return_score=False, return_doc_ids=False):
         if num is None:
             num = self.topk
         query_emb = self.encoder.encode(query)
@@ -442,12 +442,20 @@ class DenseRetriever(BaseTextRetriever):
         scores = scores[0]
 
         results = load_docs(self.corpus, idxs)
-        if return_score:
+
+        # Extract document IDs from results
+        doc_ids = [doc.get('id', doc.get('_id', idx)) for idx, doc in zip(idxs, results)]
+
+        if return_doc_ids and return_score:
+            return results, scores, doc_ids
+        elif return_doc_ids:
+            return results, doc_ids
+        elif return_score:
             return results, scores
         else:
             return results
 
-    def _batch_search(self, query: List[str], num: int = None, return_score=False):
+    def _batch_search(self, query: List[str], num: int = None, return_score=False, return_doc_ids=False):
         if isinstance(query, str):
             query = [query]
         if num is None:
@@ -465,7 +473,18 @@ class DenseRetriever(BaseTextRetriever):
         results = load_docs(self.corpus, flat_idxs)
         results = [results[i * num : (i + 1) * num] for i in range(len(idxs))]
 
-        if return_score:
+        # Extract document IDs from results
+        if return_doc_ids:
+            doc_ids = []
+            for batch_results, batch_idxs in zip(results, idxs):
+                batch_doc_ids = [doc.get('id', doc.get('_id', idx)) for idx, doc in zip(batch_idxs, batch_results)]
+                doc_ids.append(batch_doc_ids)
+
+        if return_doc_ids and return_score:
+            return results, scores, doc_ids
+        elif return_doc_ids:
+            return results, doc_ids
+        elif return_score:
             return results, scores
         else:
             return results

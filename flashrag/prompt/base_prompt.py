@@ -9,6 +9,13 @@ class PromptTemplate:
         "Only give me the answer and do not output any other words."
         "\nThe following are given documents.\n\n{reference}"
     )
+    # Custom prompt for MIA (Membership Inference Attack) experiments
+    mia_system_prompt = (
+        "You are a helpful assistant, below is a query from a user and some relevant documents."
+        "Answer the question given the information in those documents."
+        " Your answer should be short and concise. You can only output one letter from A, B, C, D, or E as your answer."
+        "\nThe following are given documents.\n\n{reference}"
+    )
     base_user_prompt = "Question: {question}"
 
     def __init__(self, config, system_prompt="", user_prompt="", reference_template=None, enable_chat=True):
